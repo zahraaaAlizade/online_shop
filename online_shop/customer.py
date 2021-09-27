@@ -1,11 +1,9 @@
 import hashlib
 import main
 from hashlib import sha256
-
 import csv
 def signup_user():
     username_signup = input("user name")
-    main.validate_phone(username_signup)
     with open('users_customer.csv', 'r') as f:
         reader = csv.reader(f)
         find2 = False
@@ -31,7 +29,7 @@ def signup_user():
             writer.writerow({"username": username, "password": hashlib.sha256(pas1).hexdigest(), "active": 1})
 def login_user():
     username_login = input("user name")
-    main.validate_phone(username_login)
+
     pass_login = input("password")
     username = username_login
     pas1 = pass_login
@@ -43,10 +41,8 @@ def login_user():
         for row in reader:
             if row != []:
                 x = row[0].split(".")
-                row[0] = x[0]
-
+                row[0] = x[0]#eslah shodeye inactivemon
                 if row[0] == username:
-
                     find = True
                     if hashed == row[1]:
                         if row[2] == "0.0":
