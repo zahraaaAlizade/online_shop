@@ -1,21 +1,23 @@
 
-import store
 from hashlib import sha256
 import csv
-import customer
+import factor
+from admin import coustomer
+from admin import administartor
+from product import Product
 def main_menu():
     Home=int(input("welcome to the online_shop\n1.Sign Up \n2.log in\n3.exit\n"))
     if Home==1:
         signup_home = int(input("1.user\n2.admin\n"))
         if signup_home==1:
-            customer.signup_user()#dakhel  filecustomer amaliat tabtenam moshtariro anjam mide va dakhel yek file csv zakhire mikonad
+            coustomer.signup_user()#dakhel  filecustomer amaliat sabtenam moshtariro anjam mide va dakhel yek file csv zakhire mikonad
         elif signup_home==2:
-            store.signup_store()#dakhel file store amaliat ro anjam mide
+            administartor.signup_store()#dakhel file store amaliat ro anjam mide
         main_menu()
     elif Home==2:
         login_home = int(input("1.user\n2.admin\n"))
         if login_home == 1:
-            customer.login_user()
+            coustomer.login_user()
         if login_home == 2:
             username_login1 = input("user name")
             pass_login1 = input("password")
@@ -43,17 +45,17 @@ def main_menu():
                                                     name_storage = (f'{username1}_storage.csv')
                                                     name_factor = (f'{username1}_factor.csv')
                                                     if manager_side_option==1:
-                                                        store.add_product(name_storage)
+                                                        Product.add_product(name_storage)
                                                     elif manager_side_option==2:
-                                                        store.show_quantity(name_storage)
+                                                        Product.show_quantity(name_storage)
                                                     elif manager_side_option==3:
-                                                        store.read_factor(name_factor)
+                                                        factor.read_factor(name_factor)
                                                     elif manager_side_option==4:
-                                                        store.search_factor(name_factor)
+                                                        factor.search_factor(name_factor)
                                                     elif manager_side_option==5:
-                                                        store.show_customer(name_factor)
+                                                        coustomer.show_customer()
                                                     elif manager_side_option==6:
-                                                        store.block_customer()
+                                                        administartor.block_customer()
                                                     elif manager_side_option==7:
                                                         main_menu()
                             else:

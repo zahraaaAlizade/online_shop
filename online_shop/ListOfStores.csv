@@ -1,11 +1,2 @@
-name_shop,starttime_shop,endtime_shop,phonnumber_shop,owner_shop
-1,1,1,1,1
-
-4,4,4,4,4
-
-charm alizade,9,21,9355553995,amirgani
-
-charm dorsa,9,9,9223592456,alizadeh
-
-nike,9,22,9121111111,milani
-
+name_shop,starttime_shop,endtime_shop,phonenumber_shop,owner_shopa,9,22,9125555656,a,,b'123',<class 'bool'>,<class 'bool'>refah,8,22,9126666666,147,,b'147',<class 'bool'>,<class 'bool'>korosh,8,22,9128888888,arman,,b'123',<class 'bool'>,<class 'bool'>
+charm mashhad,9,22,9121313131,amiri,,b'123',<class 'bool'>,<class 'bool'>
