@@ -1,164 +1,334 @@
-from file_handler import FileHandler
-from hashlib import sha256
-#import pandas as pd
+from datetime import time
+from datetime import datetime
+import logging
 import csv
 import hashlib
 
+import product
+logging.basicConfig(level=logging.DEBUG,
+                        filename="loging.log", filemode="w",
+                        format=" %(asctime)s — %(name)s — %(levelname)s — %(message)s \n",
+                        datefmt='%d-%b-%y %H:%M:%S')
 
 class user:
-    # file_handler_users = FileHandler("users.csv")
-    # file_handler_products = FileHandler("product.csv")
-    # file_handler_admin = FileHandler("admin.csv")
-    # file_handler_receipts = FileHandler("receipt.csv")
 
-    def __init__(self, username, password, loginstatus, signup):
+    def __init__(self, username, password,roll):
         """create a new object when manager signs in or logs in"""
         self.username = username
         self.password = password
-        self.loginstatus = loginstatus
-        self.signup = signup
+        self.roll = roll
 
-    def to_dict(self):
-        return {"loginstatus": self.loginstatus, "username": self.username, "password": self.password}
-
-
-class administartor(user):
-    def __init__(self, name_shop, starttime_shop, endtime_shop, phonenumber_shop, owner_shop, username, password,loginstatus, signup):
-        super().__init__(username, password, loginstatus, signup)
-        self.name_shop = name_shop
-        self.starttime_shop = starttime_shop
-        self.endtime_shop = endtime_shop
-        self.phonenumber_shop = phonenumber_shop
-        self.owner_shop = owner_shop
-
-    def add_file(self):  # file moshakhasat admin
-        fields = ["name_shop", "starttime_shop", "endtime_shop", "phonenumber_shop", "owner_shop","username","password","loginstatus","signup"]
-        with open("ListOfStores.csv", "a") as our_file:
+class Administartor(user):
+    def __init__(self, username, password,roll):
+        super().__init__(username, password,roll)
+    def add_file(self):
+        hash_pass = hashlib.sha256(self.password.encode('utf-8')).hexdigest()
+        with open("customer_admin.csv", "a") as our_file:
+            fields = ["username", "password", "roll"]
             writer = csv.DictWriter(our_file, fieldnames=fields)
+            admin=[{"username":self.username,"password":hash_pass,"roll":self.roll}]
             if our_file.tell() == 0:
                 writer.writeheader()
-            writer.writerow(
-                {"name_shop": self.name_shop, "starttime_shop": self.starttime_shop, "endtime_shop": self.endtime_shop,
-                 "phonenumber_shop": self.phonenumber_shop, "owner_shop": self.owner_shop,"password":self.password,"loginstatus":self.loginstatus,"signup":self.signup})
-
+            writer.writerows(admin)
+        logging.info("user add nashode ast")
     @staticmethod
-    def signup_store():
+    def signup_store(username):
         try:
             name_shop = input("nameshop")
-            starttime_shop = int(input("starttime"))
-            endtime_shop = int(input("starttime"))
-            phonenumber_shop = input("phonnumber")
-            loginstatus=None
-            signup=None
-        except TypeError as a:
+            starttime_shop = time(int(input("starttime")))
+            endtime_shop = time(int(input("endtime")))
+            roll=input("roll")
+            with open('customer_admin.csv', 'r') as f:
+                reader = csv.reader(f)
+                lst=list(reader)
+                for dic in lst:
+                    if dic!=[]:
+                        if dic[0]==username:
+                            with open("customer_admin.csv", "a") as our_file:
+                                fields = ["username", "name_shop", "starttime_shop", "endtime_shop", "roll"]
+                                writer = csv.DictWriter(our_file, fieldnames=fields)
+                                CA=[{"username":username,"name_shop":name_shop,"starttime_shop":starttime_shop,"endtime_shop":endtime_shop,"roll":roll}]
+                                if our_file.tell() == 0:
+                                    writer.writeheader()
+                                writer.writerows(CA)
+            logging.info("foroshgah vared nashode")
+        except Exception as a:
             print(a)
-        with open('users_customer.csv', 'r') as f:
+
+    @staticmethod
+    def login_admin(username, password):
+        try:
+            hash_pass = hashlib.sha256(password.encode('utf-8')).hexdigest()
+            with open('customer_admin.csv', 'r') as f:
+                reader = csv.reader(f)
+                lst = list(reader)
+                find_store=0
+                for dic in lst:
+                    if dic!=[]:
+                        if dic[0] == username and dic[1] == hash_pass:
+                            find_store+=1
+                        elif dic[0]==username:
+                            find_store += 1
+                            if find_store == 2:
+                                shop_name=dic[1]
+                                Administartor.show_dastresi(username,shop_name)
+
+                if find_store==1:
+
+                    Administartor.signup_store(username)
+            logging.info("admin nist")
+        except Exception as a:
+            print(a)
+    @staticmethod
+    def show_dastresi(username,shop_name):
+        try:
+            with open('customer_admin.csv', 'r') as f:
+                reader = csv.reader(f)
+                lst = list(reader)
+                find_store=0
+                for dic in lst:
+                    if dic != []:
+                        if dic[0] == username:
+                            find_store = 1
+                            print("hello", dic[0], "welcome to the manager side ")
+                            manager_side_option=int(input("if you want add new product type 1 :\nif you want see the storage quantity type 2 :\nsee factors type 3  :\nsee customer type 4 :\nblock a customer type 5 :\nexit type 6\n"))
+                            if manager_side_option==1:
+                                name = input("Enter product name = ")
+                                barcode = int(input("Enter product barcode = "))
+                                name_shop = input("Enter name_shop = ")
+                                quantity = int(input("Enter product quantity = "))
+                                price = int(input("Enter product price = "))
+                                brand = input("Enter product brand = ")
+                                new_product=product.Product(username,name, barcode,name_shop, quantity, price, brand)
+                                new_product.add_file()
+                                Administartor.show_dastresi(username, shop_name)
+                            elif manager_side_option==2:
+                                product.Product.show_quantity(username)
+                                Administartor.show_dastresi(username,shop_name)
+                            elif manager_side_option == 3:
+                                Administartor.read_factor(shop_name)
+                                Administartor.show_dastresi(username, shop_name)
+                            elif manager_side_option==4:
+                                Customer.show_customer()
+                                Administartor.show_dastresi(username, shop_name)
+                            elif manager_side_option==5:
+                                pass
+                            elif manager_side_option==6:
+                                exit()
+                if find_store==0:
+                    Administartor.signup_store(username)
+
+        except Exception as a:
+            print(a)
+
+    @staticmethod
+    def read_factor(shop_name):
+        with open("factor.csv", 'r') as f:
             reader = csv.reader(f)
-            find1 = False
             for row in reader:
                 if row != []:
-                    if row[0] == phonenumber_shop:
-                        find1 = True
-                        print("in mobile mojod ast ")
-        if find1 != True:
-            pass_signup_shop = input("password").encode()
-            owner_shop = input("ownrshop")
-            username = phonenumber_shop
-            pas = pass_signup_shop
-            fields = ["username", "password"]
-            with open("users_admin.csv", "a") as our_file:
-                writer = csv.DictWriter(our_file, fieldnames=fields)
-                if our_file.tell() == 0:
-                    writer.writeheader()
-                writer.writerow({"username": username, "password": hashlib.sha256(pas).hexdigest()})
-            store_new = administartor(name_shop, starttime_shop, endtime_shop, phonenumber_shop, owner_shop, username,pas, loginstatus, signup)
-            store_new.add_file()
+                    if row[0]==shop_name:
+                        print (row)
 
 
-class coustomer(user):
-    def __init__(self, customer_name, phone_number,username, password, loginstatus, signup):
-        super().__init__(username, password, loginstatus, signup)
-        self.customer_name = customer_name
-        self.phone_number = phone_number
+
+class Customer(user):
+    def __init__(self,username, password,roll):
+        super().__init__(username, password,roll)
     def add_file(self):
-        fields = ['customer_name',"phone_number","password","loginstatus","signup"]
-        with open("Listofcostumeer.csv", "a") as our_file:
+        with open("customer_admin.csv", "a") as our_file:
+            hash_pass = hashlib.sha256(self.password.encode('utf-8')).hexdigest()
+            fields = ["username", "password", "roll"]
             writer = csv.DictWriter(our_file, fieldnames=fields)
+            customer = [{"username": self.username, "password": hash_pass, "roll": self.roll}]
             if our_file.tell() == 0:
                 writer.writeheader()
-            writer.writerow({"customer_name": self.customer_name, "phone_number": self.phone_number,"password":self.password,"loginstatus":self.loginstatus,"signup":self.signup})
-
+            writer.writerows(customer)
+    logging.info("user vared nashode")
 
     @staticmethod
-    def signup_user():
-        try:
-            username_signup = input("user name")
-            customer_name = input("customer_name")
-            phone_number = int(input("phone_number"))
-            password = int(input("password"))
-            loginstatus=None
-            signup=None
-        except TypeError as a:
-            print(a)
-        with open('users_customer.csv', 'r') as f:
-            reader = csv.reader(f)
-            find2 = False
-            for row in reader:
-                if row != []:
-                    if row[0] == username_signup:
-                        find2 = True
-                        print("in mobile mojod ast ")
-        if find2 != True:
-            pass_signup = input("password")
-            repassword_signup = input("repassword")
-            if repassword_signup != pass_signup:
-                print("re password incorrect please try again \n")
-                while repassword_signup != pass_signup:
-                    repassword_signup = input("repassword")
-            username = username_signup
-            pas1 = pass_signup.encode()
-            fields = ["username", "password", "active"]
-            with open("users_customer.csv", "a") as our_file:
-                writer = csv.DictWriter(our_file, fieldnames=fields)
-                if our_file.tell() == 0:
-                    writer.writeheader()
-                writer.writerow({"username": username, "password": hashlib.sha256(pas1).hexdigest(), "active": 1})
-            customer_new = coustomer(customer_name, phone_number,username, password, loginstatus, signup)
-            customer_new.add_file()
-    @staticmethod
-    def login_user():
-        username_login = input("user name")
-        pass_login = input("password")
-        username = username_login
-        pas1 = pass_login
-        result = sha256(pas1.encode())
-        hashed = result.hexdigest()
-        with open('users_customer.csv', 'r') as f:
-            reader = csv.reader(f)
-            find = False
-            for row in reader:
-                if row != []:
-                    x = row[0].split(".")
-                    row[0] = x[0]  # eslah shodeye inactivemon
-                    if row[0] == username:
-                        find = True
-                        if hashed == row[1]:
-                            if row[2] == "0.0":
-                                print("you been banneded by admin")
-                            else:
-                                print("Correct")
-                        else:
-                            print("Wrong")
-            if not find:
-                print("There is not such a username!")
+    def login_customer(username,password):
+
+            hash_pass = hashlib.sha256(password.encode('utf-8')).hexdigest()
+            with open('customer_admin.csv', 'r') as f:
+                reader = csv.reader(f)
+                lst=list(reader)
+                for dic in lst:
+                    if dic != []:
+
+                        if dic[0]==username and dic[1]==hash_pass:
+                            if dic[2]=="customer":
+                                print("hello", dic[0], "welcome to the customer side ")
+                                customer_side_option = int(input(
+                                    "see factor type 1 :\nsee store type 2 :\nsearch store type 3 : \nselection stor type 4 :\nsee pruduct type 5 :\nselection product type 6:\nconfirm purchase type 7:\nexit type 8:\n"))
+                                if customer_side_option == 1:
+                                    Customer.read_factor(username)
+                                elif customer_side_option == 2:
+                                    Customer.show_stor()
+                                    Customer.login_customer(username, password)
+                                elif customer_side_option == 3:
+                                    Customer.search_store()
+                                    Customer.login_customer(username, password)
+                                elif customer_side_option==4:
+                                    search = input("store name")
+                                    Customer.selection_stor(search)
+                                    Customer.login_customer(username, password)
+                                elif customer_side_option==5:
+                                    search = input("store name")
+                                    Customer.see_product_stor(search)
+                                    Customer.login_customer(username, password)
+                                elif customer_side_option ==6:
+                                    name_shop = input("nameshop")
+                                    name_product = input("product_name")
+                                    quantity_product = input("quantity")
+                                    Customer.selection_product(name_shop, name_product,quantity_product,username)
+                                    Customer.login_customer(username, password)
+                                elif customer_side_option==7:
+                                    pass
+
 
     @staticmethod
     def show_customer():
-        with open("Listofcostumeer.csv", 'r') as f:
+        try:
+            with open("customer_admin.csv", 'r') as f:
+                reader = csv.reader(f)
+                lst = list(reader)
+                for dic in lst:
+                    if dic != []:
+                        if dic[2] == "customer":
+                            print( dic[0] , dic[2])
+        except Exception as a:
+            print(a)
+
+    @staticmethod
+    def read_factor(username):
+        with open("factor.csv", 'r') as f:
             reader = csv.reader(f)
             for row in reader:
                 if row != []:
-                    print(row[0], row[1])
+                    if row[0] == username:
+                        print(row)
+
+
+    @staticmethod
+    def show_stor():
+        try:
+            with open("customer_admin.csv", 'r') as f:
+                reader = csv.reader(f)
+                lst = list(reader)
+                now=datetime.now()
+                b=str(time(now.hour,now.minute))
+                for dic in lst:
+                    if dic != []:
+                        if dic[2] < b < dic[3]:
+                            if dic[4] == "admin":
+                                print(dic[1], dic[2],dic[3])
+        except Exception as a:
+            print(a)
+    @staticmethod
+    def search_store():
+        search = input("store name")
+        with open("customer_admin.csv", 'r') as f:
+            reader = csv.reader(f)
+            lst = list(reader)
+            find=0
+            for dic in lst:
+                if dic != []:
+                    if search==dic[1]:
+                        find+=1
+                        print(dic[1],dic[2],dic[3])
+            if find==0:
+                print("mojod nist")
+
+
+    @staticmethod
+    def selection_stor(search):
+        try:
+            with open("customer_admin.csv", 'r') as f:
+                reader = csv.reader(f)
+                lst = list(reader)
+                find = 0
+                for dic in lst:
+                    if dic != []:
+                        if search == dic[1]:
+                            find += 1
+                            print(dic[1], dic[2], dic[3])
+                if find == 0:
+                    print("mojod nist")
+        except Exception as a:
+            print(a)
+
+    @staticmethod
+    def see_product_stor(search):
+        try:
+            with open("product.csv", 'r') as f:
+                reader = csv.reader(f)
+                lst = list(reader)
+                find = 0
+                for dic in lst:
+                    if dic != []:
+                        if search == dic[3]:
+                            find+=1
+                            print(dic[1], dic[5], dic[6])
+        except Exception as a:
+            print(a)
+
+
+
+
+    @staticmethod
+    def selection_product(name_shop,name_product,quantity,username):
+        f = open('product.csv', 'r')
+        reader = csv.reader(f)
+        mylist = list(reader)
+        f.close()
+
+
+        with open("product.csv", 'r') as f:
+            reader = csv.reader(f)
+            lst = list(reader)
+            lst1=[]
+            x=0
+            for dic in lst:
+                x+=1
+                if dic != []:
+                    if name_product==dic[1] and name_shop==dic[3] :
+
+
+                        if quantity < dic[4]:
+
+                            dic[4]=int(dic[4])-int(quantity)
+                            mylist[x - 1][4] =dic[4]
+                            price=dic[5]
+                            price_all=(int(quantity)*int(price))
+                            print(price_all)
+                            with open("factor.csv", "a") as our_file:
+                                fields = ["name_shop", "name_product", "quantity","price","price_all", "username"]
+                                writer = csv.DictWriter(our_file, fieldnames=fields)
+                                admin = [{"name_shop": name_shop, "name_product": name_product, "quantity": quantity,"price": price,"price_all": price_all,"username":username}]
+                                if our_file.tell() == 0:
+                                    writer.writeheader()
+                                writer.writerows(admin)
+
+        my_new_list = open('product.csv', 'w', newline='')
+        csv_writer = csv.writer(my_new_list)
+        csv_writer.writerows(mylist)
+        my_new_list.close()
+
+
+
+
+
+
+
+
+
+
+
+    @staticmethod
+    def confirmpurchase():
+        pass
+
 
     @staticmethod
     def block_customer():
